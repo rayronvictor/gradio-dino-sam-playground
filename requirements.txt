@@ -1,0 +1,9 @@
+gradio
+numpy
+Pillow
+segment_anything @ git+https://github.com/facebookresearch/segment-anything
+groundingdino @ git+https://github.com/IDEA-Research/GroundingDINO
+torch
+torchvision
+transformers
+diffusers
