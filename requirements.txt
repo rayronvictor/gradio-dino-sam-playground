@@ -5,5 +5,8 @@ segment_anything @ git+https://github.com/facebookresearch/segment-anything
 groundingdino @ git+https://github.com/IDEA-Research/GroundingDINO
 torch
 torchvision
-transformers
+transformers>=4.30.0
 diffusers
+tensorflow
+requests
+matplotlib

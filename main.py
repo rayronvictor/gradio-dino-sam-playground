@@ -8,7 +8,7 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 
 # segment anything
-from segment_anything import build_sam, SamPredictor, SamAutomaticMaskGenerator
+from segment_anything import build_sam, build_sam_vit_b, SamPredictor, SamAutomaticMaskGenerator
 
 # Grounding DINO
 import groundingdino.datasets.transforms as T
@@ -25,6 +25,7 @@ ckpt_repo_id = "ShilongLiu/GroundingDINO"
 ckpt_filenmae = "checkpoints/groundingdino_swint_ogc.pth"
 # baixar em https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 sam_checkpoint = 'checkpoints/sam_vit_h_4b8939.pth'
+# sam_checkpoint = 'checkpoints/vitiligo_sam_finetuned.pth'
 output_dir = "outputs"
 
 parser = argparse.ArgumentParser()
@@ -183,6 +184,11 @@ def run_sam(image, text_prompt, task_type, inpaint_prompt, box_threshold, text_t
             groundingdino_model, transformed_image, text_prompt, box_threshold, text_threshold
         )
 
+        # Verificar se há caixas delimitadoras detectadas
+        if boxes_filt.size(0) == 0:
+            print("Nenhuma caixa delimitadora detectada. Verifique os parâmetros de threshold ou o texto prompt.")
+            return [image_pil]  # Retorna a imagem original se não houver detecções
+
         # process boxes
         H, W = size[1], size[0]
         for i in range(boxes_filt.size(0)):
@@ -195,13 +201,18 @@ def run_sam(image, text_prompt, task_type, inpaint_prompt, box_threshold, text_t
         if task_type == 'seg' or task_type == 'inpainting':
             sam_predictor.set_image(image)
 
+            # Verificar se as caixas são válidas
+            if torch.any(torch.isnan(boxes_filt)) or torch.any(torch.isinf(boxes_filt)):
+                print("Caixas delimitadoras inválidas detectadas.")
+                return [image_pil]
+
             transformed_boxes = sam_predictor.transform.apply_boxes_torch(boxes_filt, image.shape[:2]).to(device)
 
             masks, _, _ = sam_predictor.predict_torch(
-                point_coords = None,
-                point_labels = None,
-                boxes = transformed_boxes,
-                multimask_output = False,
+                point_coords=None,
+                point_labels=None,
+                boxes=transformed_boxes,
+                multimask_output=False,
             )
 
     if task_type == 'det':
