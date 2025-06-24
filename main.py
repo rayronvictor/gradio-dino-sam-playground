@@ -1,4 +1,5 @@
 import random
+import argparse
 
 import gradio as gr
 import numpy as np
@@ -25,8 +26,12 @@ ckpt_filenmae = "checkpoints/groundingdino_swint_ogc.pth"
 # baixar em https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 sam_checkpoint = 'checkpoints/sam_vit_b_01ec64.pth'
 output_dir = "outputs"
-# device = "cuda"
-device = "cpu"
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--cpu', action='store_true', help='Usar CPU ao invés de GPU')
+args = parser.parse_args()
+
+device = "cpu" if args.cpu else "cuda"
 
 groundingdino_model = None
 sam_predictor = None
